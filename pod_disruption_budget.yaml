@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: zk-pdb
+spec:
+  minAvailable: 2
+  selector:
+    # Matches onto pods with `zookeeper` label
+    matchLabels:
+      app: zookeeper

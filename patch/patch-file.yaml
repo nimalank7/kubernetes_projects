@@ -1,0 +1,7 @@
+# Run kubectl patch deployment patch-demo --patch-file patch-file.yaml
+spec:
+  template:
+    spec:
+      containers:
+      - name: patch-demo-ctr
+        image: redis

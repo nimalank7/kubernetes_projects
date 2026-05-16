@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: toolbox
+spec:
+  containers:
+  - name: toolbox
+    image: 172025368201.dkr.ecr.eu-west-1.amazonaws.com/github/alphagov/govuk/govuk-toolbox-image:v3
+    ports:
+    - containerPort: 80
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault

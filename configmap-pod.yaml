@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configmap-demo-pod
+spec:
+  containers:
+  - name: demo
+    image: alpine
+    command: ["sleep", "3600"]
+    env:
+      # Define the environment variable
+      - name: PLAYER_INITIAL_LIVES 
+        valueFrom:
+          configMapKeyRef:
+            # Retrieve from the game-demo ConfigMap the `player_initial_lives` key
+            name: game-demo           
+            key: player_initial_lives
+      - name: UI_PROPERTIES_FILE_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: game-demo
+            key: ui_properties_file_name
+    volumeMounts:
+    - name: config
+      mountPath: "/config"
+      readOnly: true
+    # Only schedule on a node that has a label disktype=ssd
+    nodeSelector:
+      disktype: ssd
+  volumes:
+  - name: config
+    configMap:
+      # Mount the `game-demo` ConfigMap as a mounted volume
+      name: game-demo
+      # Only create `/config/game.properties` and `config/user-interface.properties` file
+      # If `items` were omitted then by default all keys in configMap would become files
+      items:
+      - key: "game.properties"
+        path: "game.properties"
+      - key: "user-interface.properties"
+        path: "user-interface.properties"
+        

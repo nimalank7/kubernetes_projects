@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: manage-pods
+  namespace: shopping
+subjects:
+- kind: ServiceAccount
+  name: shopping-api # References the shopping-api service account
+roleRef:
+  kind: Role
+  name: shopping-api # References the role name in shopping-api-role.yaml
+  apiGroup: rbac.authorization.k8s.io

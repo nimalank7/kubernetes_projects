@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Name of the deployment is 'nginx-deployment'
+  name: nginx-deployment
+  labels:
+    app: nginx2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      # Matches onto pods that have the label`app: nginx` (see template)
+      app: nginx
+  template:
+    metadata:
+      labels:
+        # Pods are created with `app: nginx` that are managed by nginx-deployment
+        app: nginx
+    spec:
+      containers:
+        - name: nginx2
+          image: nginx:1.16
+          ports:
+            - containerPort: 8080

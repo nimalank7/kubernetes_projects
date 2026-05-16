@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs-one
+spec:
+  replicas: 2
+  # Matches on all pods with the `system` label
+  selector:
+    matchLabels:
+      system: ReplicaOne
+  # Generates pods with the `system` label
+  template:
+    metadata:
+      labels:
+        system: ReplicaOne
+    spec:
+      containers:
+      - name: nginx
+      image: nginx:1.15.1
+      ports:
+        - containerPort: 80
