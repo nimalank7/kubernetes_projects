@@ -1,0 +1,14 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.define "host_a" do |host_a|
+    host_a.vm.box = "ubuntu/jammy64"
+    host_a.vm.network "private_network", ip: "10.0.0.1"
+    host_a.vm.provision "shell", path: "host_a.sh"
+  end
+
+  config.vm.define "host_b" do |host_b|
+    host_b.vm.box = "ubuntu/jammy64"
+    host_b.vm.network "private_network", ip: "10.0.0.2"
+    host_b.vm.provision "shell", path: "host_b.sh"
+  end
+end

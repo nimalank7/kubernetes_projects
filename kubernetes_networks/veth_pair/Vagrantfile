@@ -1,0 +1,25 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "Configuring Host A"
+    
+    echo "Create container1 and container 2namespaces"
+    ip netns add container1
+    ip netns add container2
+
+    echo "Create a veth pair"
+    ip link add veth0 type veth peer name veth1
+
+    echo "Move each end of the veth pair into a namespace"
+    ip link set veth0 netns container1
+    ip link set veth1 netns container2
+
+    echo "Assign IP addresses to each veth con end inside each namespace"
+    ip netns exec container1 ip addr add 10.0.0.1/24 dev veth0
+    ip netns exec container2 ip addr add 10.0.0.2/24 dev veth1
+
+    echo "Bring veth pair up"
+    ip netns exec container1 ip link set veth0 up
+    ip netns exec container2 ip link set veth1 up
+  SHELL
+end

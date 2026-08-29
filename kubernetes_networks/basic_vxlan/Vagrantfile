@@ -1,0 +1,76 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.define "host_a" do |host_a|
+    host_a.vm.box = "ubuntu/jammy64"
+    host_a.vm.network "private_network", ip: "10.0.0.1"
+
+    host_a.vm.provision "shell", inline: <<-SHELL
+      UNDERLAY_IP=10.0.0.1
+      REMOTE_IP=10.0.0.2
+      VNI=1000
+      OVERLAY_IP=10.200.0.1/24
+
+      echo "Creating VXLAN interface"
+      ip link add vxlan${VNI} type vxlan \
+          id ${VNI} \
+          dstport 4789 \
+          local ${UNDERLAY_IP} \
+          dev enp0s8
+      ip link set vxlan${VNI} up
+
+      echo "Creating bridge"
+      ip link add br-overlay type bridge
+      ip link set br-overlay type bridge stp_state 0
+      ip link set br-overlay up
+
+      echo "Attaching VXLAN to bridge"
+      ip link set vxlan${VNI} master br-overlay
+
+      echo "Assigning overlay IP to bridge"
+      ip addr add ${OVERLAY_IP} dev br-overlay
+
+      echo "Adding remote VTEP for BUM flooding"
+      bridge fdb append 00:00:00:00:00:00 dev vxlan${VNI} dst ${REMOTE_IP} permanent
+
+      echo "Allowing VXLAN UDP traffic"
+      iptables -A INPUT -p udp --dport 4789 -j ACCEPT
+    SHELL
+  end
+
+  config.vm.define "host_b" do |host_b|
+    host_b.vm.box = "ubuntu/jammy64"
+    host_b.vm.network "private_network", ip: "10.0.0.2"
+
+    host_b.vm.provision "shell", inline: <<-SHELL
+      UNDERLAY_IP=10.0.0.2
+      REMOTE_IP=10.0.0.1
+      VNI=1000
+      OVERLAY_IP=10.200.0.2/24
+
+      echo "Creating VXLAN interface"
+      ip link add vxlan${VNI} type vxlan \
+          id ${VNI} \
+          dstport 4789 \
+          local ${UNDERLAY_IP} \
+          dev enp0s8
+      ip link set vxlan${VNI} up
+
+      echo "Creating bridge"
+      ip link add br-overlay type bridge
+      ip link set br-overlay type bridge stp_state 0
+      ip link set br-overlay up
+
+      echo "Attaching VXLAN to bridge"
+      ip link set vxlan${VNI} master br-overlay
+
+      echo "Assigning overlay IP to bridge"
+      ip addr add ${OVERLAY_IP} dev br-overlay
+
+      echo "Adding remote VTEP for BUM flooding"
+      bridge fdb append 00:00:00:00:00:00 dev vxlan${VNI} dst ${REMOTE_IP} permanent
+
+      echo "Allowing VXLAN UDP traffic"
+      iptables -A INPUT -p udp --dport 4789 -j ACCEPT
+    SHELL
+  end
+end

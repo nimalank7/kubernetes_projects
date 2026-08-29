@@ -1,0 +1,37 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "Create container1 and container2 namespaces"
+    ip netns add container1
+    ip netns add container2
+
+    echo "Create a veth pair"
+    ip link add veth-host-1 type veth peer name veth-con-1
+    ip link add veth-host-2 type veth peer name veth-con-2
+
+    echo "Create the bridge interface"
+    ip link add name br0 type bridge
+    ip addr add 10.0.0.1/24 dev br0
+    ip link set br0 up
+
+    echo "Connect host ends to the bridge"
+    ip link set veth-host-1 master br0
+    ip link set veth-host-2 master br0
+    
+    echo "Turn on host ends"
+    ip link set veth-host-1 up
+    ip link set veth-host-2 up
+
+    echo "Move container end into the namespace"
+    ip link set veth-con-1 netns container1
+    ip link set veth-con-2 netns container2
+    
+    echo "Assign IP addresses to each veth con end inside each namespace"
+    ip netns exec container1 ip addr add 10.0.0.11/24 dev veth-con-1
+    ip netns exec container2 ip addr add 10.0.0.12/24 dev veth-con-2
+
+    echo "Turn on container ends"
+    ip netns exec container1 ip link set veth-con-1 up
+    ip netns exec container2 ip link set veth-con-2 up
+  SHELL
+end
